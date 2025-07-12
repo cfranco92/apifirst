@@ -1,14 +1,32 @@
-const express = require('express');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
+const express = require("express");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const OpenApiValidator = require("express-openapi-validator");
 
 const app = express();
 const port = 3000;
-const swaggerDocument = YAML.load('./openapi.yaml');
+const swaggerDocument = YAML.load("./openapi.yaml");
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.get('/hello', (req, res) => {
+app.use(
+  OpenApiValidator.middleware({
+    apiSpec: "./openapi.yaml",
+    validateRequests: true,
+    validateResponses: true,
+    ignorePaths: /.*\/docs.*/,
+  })
+);
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    message: err.message,
+    errors: err.errors,
+    status: err.status,
+  });
+});
+
+app.get("/hello", (req, res) => {
   res.json({ message: "hello world" });
 });
 
