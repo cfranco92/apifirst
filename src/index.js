@@ -5,9 +5,10 @@ const OpenApiValidator = require("express-openapi-validator");
 
 const app = express();
 const port = 3000;
-const swaggerDocument = YAML.load("./openapi.yaml");
 
+const swaggerDocument = YAML.load("./openapi.yaml");
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(express.json());
 
 app.use(
   OpenApiValidator.middleware({
@@ -28,6 +29,18 @@ app.use((err, req, res, next) => {
 
 app.get("/hello", (req, res) => {
   res.json({ message: "hello world" });
+});
+
+app.post("/users", (req, res) => {
+  const { name, age, email } = req.body;
+  const newUser = {
+    id: Date.now().toString(),
+    name,
+    age,
+    email,
+  };
+
+  res.status(201).json(newUser);
 });
 
 app.listen(port, () => {
